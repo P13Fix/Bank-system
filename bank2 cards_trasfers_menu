@@ -1,0 +1,122 @@
+# project finalized
+
+import sqlite3 as sq
+import random
+
+
+def get_card():
+    card = [4, 0, 0, 0, 0, 0] + [random.randrange(9) for i in range(10)]
+    card[-1] = lyn_check(card)
+    return ''.join(list(map(str, card)))
+
+
+def lyn_check(card_num):
+    lyn_card = [(i[1] * 2 if i[1] * 2 < 10 else i[1] * 2 - 9) if i[0] % 2 == 0 else i[1] for i in enumerate(card_num[0:-1])]
+    control_digit = 0 if sum(lyn_card) % 10 == 0 else 10 - (sum(lyn_card) % 10)
+    return control_digit
+
+
+def get_pin():
+    return str(random.randrange(1000, 9999))
+
+
+def create_card():
+    card_num, card_pin = get_card(), get_pin()
+    cur.execute(f"INSERT INTO card VALUES ({random.randrange(99999999)}, {card_num}, {card_pin}, 0)")
+    conn.commit()
+    print(f'Your card has been created\nYour card number:'
+          f'\n{card_num}'
+          f'\nYour card PIN:\n{card_pin}\n')
+    return
+
+
+def get_card_info(x, y):
+    cur.execute(f"SELECT id, number, pin, balance FROM card WHERE number = {x} AND pin = {y}")
+    return cur.fetchone()
+
+
+def balance(data):
+    print(f'Balance: {data[3]}\n')
+    return data
+
+
+def add_income(data):
+    data = (data[0], data[1], data[2], data[3] + int(input('Enter income: \n')))
+    cur.execute(f"UPDATE card SET balance={data[3]} WHERE id = {data[0]}")
+    conn.commit()
+    print('Income was added!')
+    return data
+
+
+def do_transfer(data):
+    card2 = [int(i) for i in input('Transfer\nEnter card number:\n')]
+    if lyn_check(card2) != card2[-1]:
+        print('Probably you made a mistake in the card number. Please try again!')
+        return data
+    card2 = ''.join(list(map(str, card2)))
+    cur.execute(f"SELECT number FROM card WHERE number = {card2}")
+    if cur.fetchone() == None:
+        print('Such a card does not exist.')
+        return data
+    transfer_amnt = int(input('Enter how much money you want to transfer:\n'))
+    if transfer_amnt > data[3]:
+        print('Not enough money!')
+        return data
+    data = (data[0], data[1], data[2], data[3] - transfer_amnt)
+    cur.execute(f"UPDATE card SET balance={data[3]} WHERE number = {data[1]}")
+    cur.execute(f"UPDATE card SET balance = balance + {transfer_amnt} WHERE number = {card2}")
+    conn.commit()
+    print('Success!')
+    return data
+
+
+def close_account(data):
+    cur.execute(f"DELETE FROM card WHERE number = {data[1]}")
+    conn.commit()
+    print('The account has been closed!')
+    return
+
+def log_out(data):
+    print('You have successfully logged out!')
+    return
+
+
+def exit(data):
+    global user_option
+    user_option = '0'
+    return
+
+
+def logged_user_menu(data):
+    logged_user_option = input('\n1. Balance\n2. Add income\n3. Do transfer\n4. Close account\n5. Log out\n0. Exit\n')
+    data = logged_card_menu[logged_user_option](data)
+    return data
+
+def main_menu():
+    return input('1. Create an account\n2. Log into account\n0. Exit\n')
+
+
+logged_card_menu = {'1': balance, '2': add_income, '3': do_transfer, '4': close_account, '5': log_out, '0': exit}
+conn = sq.connect('card.s3db')
+cur = conn.cursor()
+cur.execute("SELECT name FROM sqlite_master WHERE type ='table' AND name = 'card'")
+if cur.fetchone() == None:
+    cur.execute('CREATE TABLE card (id INT, number TEXT, pin TEXT, balance INT DEFAULT 0);')
+    conn.commit()
+user_option = ''
+while user_option != '0':
+    user_option = main_menu()
+    if user_option == '1':
+        user_option = create_card()
+    elif user_option == '2':
+        data = get_card_info(input('Enter your card number:\n'), input('Enter your PIN:\n'))
+        if data == None:
+            print('Wrong card number or PIN!\n')
+        else:
+            print('\nYou have successfully logged in!')
+            while data != None:
+                data = logged_user_menu(data)
+conn.close()
+print('Bye!')
+
+
