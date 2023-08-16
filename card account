@@ -1,0 +1,33 @@
+import random
+
+
+class CardAccount:
+    def __init__(self):
+        self.card_number = self.gen_card()
+        self.pin = random.randrange(1000, 9999)
+        self.balance = 0
+
+    def gen_card(self):
+        IIN = '400000'
+        acc_number = str(random.randrange(100000000, 999999999))
+        control_digit = str(random.randrange(9))
+        return ''.join(IIN + acc_number + control_digit)
+
+
+class BankSy:
+    def __init__(self):
+        self.user_count = 0
+
+    def main_menu(self):
+        option = input('1. Create an account \n2. Log into account \n0. Exit \n')
+        if option == '1':
+
+            user_name = CardAccount()
+            self.user_count += 1
+            self.users[user_name.card_number] = user_name.pin
+            print(f'\nYour card has been created \nYour card number:\n{user_name.card_number}\nYour card PIN'
+                  f':\n{user_name.pin}')
+
+Ann = CardAccount()
+Tom = CardAccount()
+print(Ann.card_number, Tom.card_number)
