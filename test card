@@ -1,0 +1,36 @@
+import uuid
+import sqlite3 as sq
+import random
+print(random.randrange(99999999))
+conn = sq.connect('card.s3db')
+cur = conn.cursor()
+
+def lyn_check(card_num):
+    lyn_card = [(i[1] * 2 if i[1] * 2 < 10 else i[1] * 2 - 9) if i[0] % 2 == 0 else i[1] for i in enumerate(card_num[0:-1])]
+    control_digit = 0 if sum(lyn_card) % 10 == 0 else 10 - (sum(lyn_card) % 10)
+    return control_digit
+
+def get_card():
+    card = [4, 0, 0, 0, 0, 0] + [random.randrange(9) for i in range(10)]
+    card[-1] = lyn_check(card)
+    return ''.join(list(map(str, card)))
+
+
+def do_transfer(data):
+    card2 = [int(i) for i in input('Transfer\nEnter card number:\n')]
+    if lyn_check(card2) != card2[-1]:
+        return print('Probably you made a mistake in the card number. Please try again!')
+card1 = '4000003380427159'
+card2 = '4000008758542323'
+transfer_amnt = 15
+# cur.execute(f"UPDATE card SET balance = balance + {transfer_amnt} WHERE number = {card2}")
+conn.commit()
+# cur.execute(f"SELECT balance FROM card WHERE number = {card1}")
+# print(cur.fetchone())
+# cur.execute(f"SELECT balance FROM card WHERE number = {card2}")
+# print(cur.fetchone())
+# cur.execute(f"UPDATE card SET balance=balance - {transfer_amnt} WHERE number = {card1}")
+# cur.execute(f"UPDATE card SET balance= balance + {transfer_amnt} WHERE number = {card2}")
+# conn.commit()
+
+# return ''.join(list(map(str, card)) + [control_digit])
